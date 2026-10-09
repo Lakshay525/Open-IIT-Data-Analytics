@@ -1,2 +1,0 @@
-new_visits_simulated,neighbour_predictions,median_error_before_m,median_error_after_m,mean_error_before_m,mean_error_after_m,median_old_geocoder_m,share_improved_by_10m,share_worse_by_10m
-140,355,68.70893034111569,66.34101650463722,174.24768482579475,171.358614969545,306.15581000529784,0.2535211267605634,0.16901408450704225
