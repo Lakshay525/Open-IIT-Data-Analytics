@@ -1,23 +1,23 @@
-"""One command that rebuilds the whole PS3 solution from the raw CSVs in clean_data/.
+"""Rebuild the whole solution from the raw CSVs in data/ with one command.
 
-    python run_pipeline.py            # full run (about 3-4 minutes)
-    python run_pipeline.py --fast     # skip the slow optional steps (integrity stress test, re-tuning, learning curve, notebooks)
+    python run_pipeline.py            # everything (about 5 minutes)
+    python run_pipeline.py --fast     # skip the slow optional steps (stress test, learning curve, notebook)
     python run_pipeline.py --retune   # also refit the pin-model sigmas on visit pseudo-labels
 
-Stages (each writes its outputs; later stages read earlier ones):
-  1 validate    validate_inputs.py          data audit               -> results/file_quality.csv, validation_checks.csv
-  2 score       eval.py                     baseline + fixed folds   -> results/baseline_scores.csv, folds.csv
-  3 evidence    extract_evidence.py         Task 2 visit cleaning    -> evidence.csv
-  4 integrity   integrity_analysis.py       fake-visit stress test   -> results/integrity_*.csv
-  5 parse       address_parser.py           multilingual parser      -> results/address_features.csv
-  6 tune        tune_pin_model.py           (optional) refit sigmas  -> results/pin_model_params.json
-  7 pins        run_task3.py                Task 3 pin model + CV    -> pins.csv, results/pin_model_*.csv
-  8 confidence  confidence_directions.py    Task 4                   -> predictions.csv, ps2_location_confidence.csv, offline_pack/
-  9 impact      impact_analysis.py, learning_loop_experiment.py    -> results/impact_*.csv, learning_curve.csv
- 10 present     make_figures.py, build_demo.py, make_summary.py    -> demo_map.html, results/fig_*.png, SUMMARY.md
- 11 tests       test_task3.py, test_task4.py, verify_package.py
- 12 notebooks   create_notebooks.py, create_task3_notebook.py, create_task4_notebook.py
-Guards: folds.csv and evidence.csv must not change silently (their hashes are compared before/after).
+Stages
+  validation   data audit                         -> outputs/results/file_quality.csv, validation_checks.csv
+  scoring      baseline scores and fixed folds    -> outputs/folds.csv, results/baseline_scores.csv
+  evidence     one trusted point per visit        -> outputs/evidence.csv
+  integrity    fake-visit stress test (optional)  -> outputs/results/integrity_*.csv
+  parser       multilingual address parser        -> outputs/results/address_features.csv
+  tuning       fit sigmas (optional)              -> outputs/results/pin_model_params.json
+  evaluate     pin model, CV, ablation            -> outputs/pins.csv
+  confidence   calibrated radii, tiers, directions-> outputs/predictions.csv, ps2_location_confidence.csv, offline_pack/
+  analysis     impact, learning curve, pilot power-> outputs/results/impact_*.csv, learning_curve.*, pilot_power.csv
+  present      figures, demo map, summary         -> outputs/demo_map.html, summary.md
+  notebook     analysis notebook (optional)       -> notebooks/analysis.ipynb
+  tests        tests/*.py
+Guard: folds.csv and evidence.csv must not change silently (content hashes compared before/after).
 """
 
 from __future__ import annotations
@@ -30,10 +30,11 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+OUT = ROOT / "outputs"
 
 
-def sha(p: Path) -> str:
-    """Hash of the table CONTENT (not bytes), so line endings / float formatting cannot trigger a false alarm."""
+def content_hash(p: Path) -> str:
+    """Hash of the table content (not bytes), so line endings or float formatting cannot cause a false alarm."""
     if not p.exists():
         return "-"
     import pandas as pd
@@ -42,12 +43,12 @@ def sha(p: Path) -> str:
     return hashlib.sha256(h + ",".join(df.columns).encode()).hexdigest()[:12]
 
 
-def run(script: str, *args: str) -> None:
+def run(module: str, *args: str) -> None:
     t = time.time()
-    print(f"\n=== {script} {' '.join(args)}", flush=True)
-    r = subprocess.run([sys.executable, script, *args], cwd=ROOT)
+    print(f"\n=== {module} {' '.join(args)}", flush=True)
+    r = subprocess.run([sys.executable, "-m", module, *args], cwd=ROOT)
     if r.returncode != 0:
-        raise SystemExit(f"FAILED: {script} (exit {r.returncode})")
+        raise SystemExit(f"FAILED: {module} (exit {r.returncode})")
     print(f"--- done in {time.time() - t:.1f}s", flush=True)
 
 
@@ -57,38 +58,32 @@ def main():
     ap.add_argument("--retune", action="store_true")
     a = ap.parse_args()
     t0 = time.time()
-    folds_before, ev_before = sha(ROOT / "folds.csv"), sha(ROOT / "evidence.csv")
+    before = {n: content_hash(OUT / n) for n in ("folds.csv", "evidence.csv")}
 
-    run("validate_inputs.py")
-    run("eval.py")
-    run("extract_evidence.py")
+    run("geocoder.validation")
+    run("geocoder.scoring")
+    run("geocoder.evidence")
     if not a.fast:
-        run("integrity_analysis.py")
-    run("address_parser.py")
+        run("geocoder.integrity")
+    run("geocoder.parser")
     if a.retune:
-        run("tune_pin_model.py")
-    run("run_task3.py", "--skip-parse")
-    run("confidence_directions.py")
-    run("impact_analysis.py")
-    run("pilot_power.py")
+        run("geocoder.tuning")
+    run("geocoder.evaluate", "--skip-parse")
+    run("geocoder.confidence")
+    run("geocoder.analysis")
+    run("geocoder.present")
     if not a.fast:
-        run("learning_loop_experiment.py")
-    run("make_figures.py")
-    run("build_demo.py")
-    run("make_summary.py")
-    run("test_task3.py")
-    run("test_task4.py")
-    if not a.fast:
-        run("create_notebooks.py")
-        run("create_task3_notebook.py")
-        run("create_task4_notebook.py")
-        run("verify_package.py")
+        run("geocoder.notebook")
+    for t in ("tests.test_data", "tests.test_model", "tests.test_outputs"):
+        if a.fast and t == "tests.test_data":
+            continue  # needs the stress-test output
+        run(t)
 
-    folds_after, ev_after = sha(ROOT / "folds.csv"), sha(ROOT / "evidence.csv")
-    print(f"\nfolds.csv   {folds_before} -> {folds_after}  {'UNCHANGED' if folds_before in ('-', folds_after) else 'CHANGED!'}")
-    print(f"evidence.csv {ev_before} -> {ev_after}  {'UNCHANGED' if ev_before in ('-', ev_after) else 'CHANGED (rerun Task 3+ from here)'}")
-    print(f"\nPipeline finished in {time.time() - t0:.0f}s. Open demo_map.html; deliverables: pins.csv, predictions.csv, "
-          f"ps2_location_confidence.csv, offline_pack/, SUMMARY.md")
+    for n, h in before.items():
+        now = content_hash(OUT / n)
+        print(f"{n:13s} {h} -> {now}  {'UNCHANGED' if h in ('-', now) else 'CHANGED (rerun from the pin model onward)'}")
+    print(f"\nFinished in {time.time() - t0:.0f}s. Open outputs/demo_map.html. Deliverables: outputs/pins.csv, "
+          "predictions.csv, ps2_location_confidence.csv, offline_pack/, summary.md")
 
 
 if __name__ == "__main__":
