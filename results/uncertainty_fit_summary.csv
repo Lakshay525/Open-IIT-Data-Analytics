@@ -1,0 +1,2 @@
+pseudo_label_visits,pseudo_label_addresses,pseudo_label_80th_m,fit_definition,training_population,uncertainty_interpretation
+651,175,183.48313955238504,leave-one-agent-out median of at least two other contact agents,non-test accounts only; no surveyed coordinates,proxy 80th percentile; surveyed coverage checked separately

@@ -1,0 +1,240 @@
+{
+  "surveyed": {
+    "n": 100,
+    "old_median": 376.3977525506533,
+    "old_p90": 839.1808492658729,
+    "new_median": 45.67582035956785,
+    "new_p90": 368.5661225564853,
+    "new_median_ci": [
+      27.757682517406263,
+      74.33247230168108
+    ],
+    "old_within": [
+      0.05,
+      0.09,
+      0.35
+    ],
+    "new_within": [
+      0.51,
+      0.65,
+      0.86
+    ],
+    "visited": {
+      "n": 49,
+      "old_median": 383.67069213063417,
+      "new_median": 11.297657808270763
+    },
+    "unvisited": {
+      "n": 51,
+      "old_median": 362.8682681084143,
+      "new_median": 131.6315604999328,
+      "old_p90": 653.4779644333848,
+      "new_p90": 535.3127209275972
+    },
+    "dev85": {
+      "old_median": 362.8682681084144,
+      "new_median": 38.51074489918575,
+      "old_p90": 747.6895314845952,
+      "new_p90": 351.4423154878154
+    },
+    "test15": {
+      "old_median": 455.4846320129802,
+      "new_median": 68.27065190841392,
+      "old_p90": 2845.183629774717,
+      "new_p90": 2472.609142837175
+    },
+    "share_worse_than_old_by_25m": 0.07,
+    "share_better_than_old_by_25m": 0.87
+  },
+  "ablation": [
+    {
+      "variant": "0 old geocoder only",
+      "median": 376.3977525506532,
+      "p90": 839.1808492658729
+    },
+    {
+      "variant": "1 + own visit evidence",
+      "median": 125.94181617617788,
+      "p90": 625.0511445585635
+    },
+    {
+      "variant": "2 + locality group/centroid",
+      "median": 118.84526376784876,
+      "p90": 550.0045572633888
+    },
+    {
+      "variant": "3 + neighbours on same street key",
+      "median": 69.02667822112268,
+      "p90": 550.0045572633888
+    },
+    {
+      "variant": "4 + street-number grid regression",
+      "median": 37.03664232089484,
+      "p90": 537.4270496831358
+    },
+    {
+      "variant": "5 + landmark groups and POIs (full model)",
+      "median": 45.67582035956785,
+      "p90": 368.5661225564853
+    }
+  ],
+  "hide_and_predict": {
+    "n": 1231,
+    "old_median": 320.54342919485964,
+    "new_median": 126.32685227286495,
+    "old_p90": 797.1864587409898,
+    "new_p90": 606.9106789758638,
+    "old_within100": 0.11860276198212835,
+    "new_within100": 0.4191714053614947,
+    "share_worse_than_old_by_25m": 0.1502843216896832,
+    "by_precision": {
+      "locality": {
+        "n": 891,
+        "old": 354.2600457291224,
+        "new": 138.5688594023361
+      },
+      "pincode": {
+        "n": 94,
+        "old": 1351.978999299256,
+        "new": 1368.595621693295
+      },
+      "rooftop": {
+        "n": 26,
+        "old": 17.93219098485444,
+        "new": 19.827325372488176
+      },
+      "street": {
+        "n": 220,
+        "old": 121.24420024577262,
+        "new": 73.08777440669502
+      }
+    }
+  },
+  "calibration": {
+    "cov90": 0.91,
+    "cov90_ci": [
+      0.8377362530335634,
+      0.9519280048361152
+    ],
+    "cov50": 0.59,
+    "cov50_ci": [
+      0.4920125056109662,
+      0.6813284290433533
+    ]
+  },
+  "tiers": {
+    "counts": {
+      "high": 1106,
+      "low": 1034,
+      "medium": 740
+    },
+    "share_low": 0.3590277777777778,
+    "quality": {
+      "high": {
+        "n": 39,
+        "median_err": 9.567895797133614,
+        "within_100": 0.9743589743589745,
+        "within_250": 1.0
+      },
+      "low": {
+        "n": 35,
+        "median_err": 192.44584276272684,
+        "within_100": 0.2,
+        "within_250": 0.6
+      },
+      "medium": {
+        "n": 26,
+        "median_err": 45.67582035956785,
+        "within_100": 0.7692307692307693,
+        "within_250": 1.0
+      }
+    }
+  },
+  "learning_curve": [
+    {
+      "visited_known": 0,
+      "median": 238.83415320220575,
+      "within100": 0.1821138211382113
+    },
+    {
+      "visited_known": 43,
+      "median": 234.42312955444496,
+      "within100": 0.1891598915989159
+    },
+    {
+      "visited_known": 86,
+      "median": 206.99682297558485,
+      "within100": 0.2357723577235772
+    },
+    {
+      "visited_known": 172,
+      "median": 191.09676872309785,
+      "within100": 0.2731707317073171
+    },
+    {
+      "visited_known": 302,
+      "median": 177.31475281980704,
+      "within100": 0.3159891598915989
+    },
+    {
+      "visited_known": 431,
+      "median": 156.8754203521202,
+      "within100": 0.3539295392953929
+    },
+    {
+      "visited_known": 646,
+      "median": 144.98585896689156,
+      "within100": 0.3826558265582656
+    },
+    {
+      "visited_known": 862,
+      "median": 135.6350296725433,
+      "within100": 0.4081300813008129
+    }
+  ],
+  "impact": {
+    "address-not-traceable rate (old -> new)": {
+      "old": 0.1956445221482776,
+      "new": 0.1630427104152351,
+      "relative": -0.1666046367249959,
+      "ci": [
+        -0.2128277120957393,
+        -0.1177871556021127
+      ]
+    },
+    "minutes per visit (old -> new)": {
+      "old": 13.160145676941426,
+      "new": 11.698335675057766,
+      "relative": -0.1109280285818375,
+      "ci": [
+        -0.1304479973247746,
+        -0.0914114503342187
+      ]
+    },
+    "productive visits per agent-day (relative uplift)": {
+      "old": 1.0,
+      "new": 1.1020944039077962,
+      "relative": 0.1020944039077963,
+      "ci": [
+        0.0621305205898173,
+        0.1438149333036769
+      ]
+    }
+  },
+  "far_old_pin": {
+    "n": 447,
+    "share_within_200m": 0.4161073825503356
+  },
+  "directions": {
+    "share_with_a_landmark": 0.9940972222222222,
+    "surveyed_with_address_landmark": 72.0,
+    "address_landmark_within_300m_of_truth": 0.625,
+    "address_landmark_within_300m_of_our_pin": 0.6388888888888888,
+    "same_landmark_chosen_for_pin_and_truth": 0.9722222222222222,
+    "share_directions_needing_locality_disambiguation": 0.0548611111111111
+  },
+  "coverage_of_evidence": {
+    "addresses_with_visit_pin": 1231,
+    "total": 2880
+  }
+}

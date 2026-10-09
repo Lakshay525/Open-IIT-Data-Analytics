@@ -1,0 +1,28 @@
+check,observed,expected,status,note
+localities.town_id -> towns,0,0 unresolved keys,PASS,
+landmarks_poi.town_id -> towns,0,0 unresolved keys,PASS,
+baseline_geocodes.address_id -> addresses,0,0 unresolved keys,PASS,
+surveyed_addresses.address_id -> baseline,0,0 unresolved keys,PASS,
+field_visits.address_id -> addresses,0,0 unresolved keys,PASS,
+field_visits.address_id -> baseline,0,0 unresolved keys,PASS,
+field_visits.agent_id -> agents,0,0 unresolved keys,PASS,
+visit_gps_points.visit_id -> field_visits,0,0 unresolved keys,PASS,
+addresses.account_id -> accounts,0,0 unresolved keys,PASS,
+splits.account_id -> accounts,0,0 unresolved keys,PASS,
+addresses.account_id -> splits,0,0 unresolved keys,PASS,
+Visit account matches address account,5578,5578 matching rows,PASS,
+Known official splits,"test, train, validation","train, validation, test",PASS,
+Surveyed official test rows,15,reported; reserve for final model assessment,PASS,"The 15-row source test group is identified, but prior exploratory review exposed some labels"
+Surveyed address types,residence,residence only in supplied survey,PASS,
+Finite baseline coordinates,1,1,PASS,
+Finite surveyed coordinates,1,1,PASS,
+Finite GPS coordinates and accuracy,1,1,PASS,
+Positive GPS accuracy,160406,160406 positive rows,PASS,
+Non-negative dwell seconds,5578,5578 non-negative rows,PASS,
+Known precision tiers,"locality, pincode, rooftop, street","rooftop, street, locality, pincode",PASS,
+Addresses without baseline geocode,237,reported as out of evaluated scope,PASS,All are marked town_id=OUT
+Baseline coverage for town addresses,2880,"all 2,880 in-town baseline addresses",PASS,
+Contiguous GPS sequence per visit,True,seq starts at 0 and increments by 1,PASS,
+Ordered GPS timestamps per visit,True,nondecreasing by seq,PASS,
+Field-agent town metadata,9,9 field agents with town IDs,PASS,
+Coordinate convention,x/y local Cartesian; errors measured with Euclidean distance,metres per Task PDF,PASS,Inferred from task units and town-radius fields; no CRS/EPSG metadata supplied
