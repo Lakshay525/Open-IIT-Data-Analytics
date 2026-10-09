@@ -1,0 +1,12 @@
+file,rows,columns,duplicate_rows,duplicate_key_rows,missing_cells,missing_columns,primary_key,status
+towns.csv,3,4,0,0,0,,town_id,PASS
+localities.csv,36,6,0,0,0,,locality_id,PASS
+landmarks_poi.csv,240,6,0,0,0,,poi_id,PASS
+baseline_geocodes.csv,2880,4,0,0,0,,address_id,PASS
+surveyed_addresses.csv,100,3,0,0,0,,address_id,PASS
+visit_gps_points.csv,160406,6,0,0,0,,visit_id+seq,PASS
+addresses.csv,3117,7,0,0,0,,address_id,PASS
+field_visits.csv,5578,15,0,0,4973,ptp_id:4973,visit_id,PASS
+agents.csv,30,6,0,0,22,town_id:21; tenure_months:1,agent_id,PASS
+accounts.csv,2400,20,0,0,2365,salary_credit_day:1638; ability_to_pay_estimate:727,account_id,PASS
+splits.csv,2400,2,0,0,0,,account_id,PASS

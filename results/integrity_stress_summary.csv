@@ -1,0 +1,13 @@
+scenario,method,affected_addresses,reported_pins,abstentions,median_pin_shift_m,p90_pin_shift_m,median_error_after_m
+home_checkin,"independent-agent cluster, may abstain",38,16,22,0.0,3.524754878398196,7.116484120571606
+home_checkin,"mean, high-trust injection",38,38,0,2502.679835468559,3771.1503480921,2507.623784072943
+home_checkin,"median, high-trust injection",38,38,0,3290.7532643335826,4102.143201026119,3293.633809620609
+home_checkin,"median, recomputed safeguards",38,38,0,0.0,3721.9678745456913,9.902699976820951
+rogue_agent,"independent-agent cluster, may abstain",16,9,7,0.0,23.323082923316036,8.76584280032441
+rogue_agent,"mean, high-trust injection",16,16,0,2668.439325817567,4934.409687150701,2657.9895142566697
+rogue_agent,"median, high-trust injection",16,16,0,3076.065410494439,5976.113967457728,3073.70225025479
+rogue_agent,"median, recomputed safeguards",16,16,0,0.0,2544.7482553193927,8.99577755463697
+tea_stall,"independent-agent cluster, may abstain",38,16,22,0.0,2.5,7.116484120571606
+tea_stall,"mean, high-trust injection",38,38,0,4128.666752367684,5247.439261249718,4129.877494035429
+tea_stall,"median, high-trust injection",38,38,0,4225.987622874383,5878.710547309425,4227.593736366194
+tea_stall,"median, recomputed safeguards",38,38,0,0.0,1396.3372653071358,8.86510836636517

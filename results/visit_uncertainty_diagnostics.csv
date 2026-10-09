@@ -1,0 +1,2 @@
+sample,visits,addresses,median_endpoint_error_m,median_checkin_error_m,uncertainty_coverage,target_pseudo_quantile,spearman_uncertainty_vs_error,spearman_weight_vs_error
+development surveyed eligible visit rows,127,38,8.417244204607647,23.938462774372137,0.952755905511811,0.8,0.2783030733338492,-0.00593780392067509
