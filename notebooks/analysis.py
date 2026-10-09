@@ -14,7 +14,6 @@ from pathlib import Path
 if Path.cwd().name == 'notebooks':
     os.chdir(Path.cwd().parent)
 import numpy as np, pandas as pd, matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from IPython.display import display, Image
 pd.set_option('display.width', 200); pd.set_option('display.max_columns', 30); pd.set_option('display.max_colwidth', 160)

@@ -355,7 +355,38 @@ Tiers: {tiers}. Surveyed pins worse than the old pin by >25 m: {s['share_worse_t
     print(md)
 
 
+# ======================================================================
+# diagnostic figures used by the analysis notebook
+# ======================================================================
+def diagnostic_figures():
+    """Baseline error by precision tier, and fake-visit stress-test pin shifts (skipped if the stress test was not run)."""
+    sc = pd.read_csv(RES / "baseline_scores.csv")
+    t = sc[(sc.dimension == "precision") & (sc.n >= 10)].reset_index(drop=True)
+    fig, ax = plt.subplots(figsize=(5.4, 3.2))
+    err = [t.median_error_m - t.median_ci95_low_m, t.median_ci95_high_m - t.median_error_m]
+    ax.bar(t.segment, t.median_error_m, yerr=err, color="#8a8f98", capsize=4)
+    for i, r in t.iterrows():
+        ax.text(i, r.median_error_m + 30, f"{r.median_error_m:.0f} m\nn={int(r.n)}", ha="center", fontsize=8)
+    ax.set_ylabel("median error of the old pin (m)"); ax.set_title("Old geocoder error by precision tier", fontsize=10)
+    ax.spines[["top", "right"]].set_visible(False); plt.tight_layout(); plt.savefig(RES / "baseline_by_precision.png", dpi=140); plt.close()
+
+    f = RES / "integrity_stress_summary.csv"
+    if f.exists():
+        d = pd.read_csv(f)
+        d["label"] = d.scenario.str.replace("_", " ") + ": " + d.method
+        d = d.sort_values(["scenario", "method"]).reset_index(drop=True)
+        fig, ax = plt.subplots(figsize=(8.5, 4.2))
+        y = np.arange(len(d))[::-1]
+        ax.barh(y, d.p90_pin_shift_m.clip(lower=1), color="#c26a3d")
+        ax.set_xscale("log"); ax.set_yticks(y); ax.set_yticklabels(d.label, fontsize=7)
+        for yi, (_, r) in zip(y, d.iterrows()):
+            ax.text(max(r.p90_pin_shift_m, 1) * 1.1, yi, f"{r.p90_pin_shift_m:,.0f} m" + (f"  (abstains {int(r.abstentions)})" if r.abstentions else ""), va="center", fontsize=7)
+        ax.set_xlabel("90th-percentile pin shift after injecting fake visits (m, log scale)")
+        ax.spines[["top", "right"]].set_visible(False); plt.tight_layout(); plt.savefig(RES / "integrity_stress_pin_shift.png", dpi=140); plt.close()
+
+
 def main():
+    diagnostic_figures()
     architecture()
     example_map()
     summary()
