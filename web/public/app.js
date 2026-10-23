@@ -8,8 +8,8 @@ const NS = "http://www.w3.org/2000/svg";
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = n => Math.round(n).toLocaleString("en-IN");
 const TEAM = [
-  ["Lakshay Shrivastava", "25MT10046"], ["Shivansh Goyal", "25MT10080"], ["Swarit Mishra", "25AG10010"], ["Devyansh Agarwal", "25MI10045"], ["Roumya Lenka", "25CE10006"],
-  ["Vansh Lohia", "25ME10169"], ["Mayank Tiwari", "25AE10045"], ["Reshmika Jyothikumar", "25BT10061"], ["Devarati Mukherjee", "25CH10053"], ["Janees Zafar", "25MT10039"]
+  "Lakshay Shrivastava", "Shivansh Goyal", "Swarit Mishra", "Devyansh Agarwal", "Roumya Lenka",
+  "Vansh Lohia", "Mayank Tiwari", "Reshmika Jyothikumar", "Devarati Mukherjee", "Janees Zafar"
 ];
 
 async function getJSON(url) { const r = await fetch(url); if (!r.ok) throw new Error(url + " " + r.status); return r.json(); }
@@ -25,7 +25,7 @@ async function postJSON(url, body, ms = 45000) {
 }
 
 /* ------------------------------------------------------------------ team */
-$("#teamGrid").innerHTML = TEAM.map(([n, r]) => `<div class="member"><div class="avatar">${n.split(" ").map(w => w[0]).slice(0, 2).join("")}</div><b>${esc(n)}</b><span>${r}</span></div>`).join("");
+$("#teamGrid").innerHTML = TEAM.map(n => `<div class="member"><div class="avatar">${n.split(" ").map(w => w[0]).slice(0, 2).join("")}</div><b>${esc(n)}</b></div>`).join("");
 
 /* ------------------------------------------------------------------ svg chart helpers */
 function svg(w, h, inner) { return `<svg viewBox="0 0 ${w} ${h}" role="img" xmlns="${NS}">${inner}</svg>`; }
@@ -90,10 +90,10 @@ function renderCharts(S) {
     { xmin: 0, xmax: 1, ymin: 0, ymax: 1, yticks: [0, .25, .5, .75, 1], xticks: [0, .25, .5, .75, 1], xfmt: v => Math.round(v * 100) + "%", yfmt: v => Math.round(v * 100) + "%", xlabel: "promised coverage", ylabel: "observed coverage" });
   const s = S.surveyed, hp = S.hide_and_predict, c = S.calibration;
   $("#metricRow").innerHTML = [
-    [`${fmt(s.old_median)} → ${fmt(s.new_median)} m`, "median error, 100 surveyed addresses"],
+    [`${fmt(s.old_median)} → ${fmt(s.new_median)} m`, "median error, 100 field-verified addresses"],
     [`${fmt(s.old_p90)} → ${fmt(s.new_p90)} m`, "90th-percentile error"],
     [`${fmt(hp.old_median)} → ${fmt(hp.new_median)} m`, `addresses with no visit (${fmt(hp.n)} checked)`],
-    [`${Math.round(c.cov90 * 100)}%`, `of true locations inside the 90% circle (95% CI ${Math.round(c.cov90_ci[0] * 100)}–${Math.round(c.cov90_ci[1] * 100)}%)`]
+    [`${Math.round(c.cov90 * 100)}%`, `of true locations inside the 90% circle (95% CI ${Math.round(c.cov90_ci[0] * 100)} to ${Math.round(c.cov90_ci[1] * 100)}%)`]
   ].map(([b, t]) => `<div class="metric"><b>${b}</b><span>${t}</span></div>`).join("");
   const q = S.tiers.quality, cnt = S.tiers.counts;
   $("#tierTable").innerHTML = `<table class="tbl"><tr><th>Tier</th><th style="text-align:left">Action</th><th>Addresses</th><th>Within 100 m</th><th>Median error</th></tr>` +
@@ -148,6 +148,30 @@ function ring(x, y, r, color) { ctx.beginPath(); ctx.arc(sx(x), sy(y), r, 0, 6.2
 function dot(x, y, r, color) { ctx.beginPath(); ctx.arc(sx(x), sy(y), r, 0, 6.2832); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke(); }
 function star(x, y, r, color) { const X = sx(x), Y = sy(y); ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; ctx.lineTo(X + rr * Math.cos(a), Y + rr * Math.sin(a)); } ctx.closePath(); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = "#14305f"; ctx.lineWidth = 1.5; ctx.stroke(); }
 
+function tag(text, X, Y, color) {
+  ctx.font = "700 11px Inter, Segoe UI, sans-serif"; const w = ctx.measureText(text).width + 14; X = Math.min(Math.max(X, w / 2 + 4), M.W - w / 2 - 4); Y = Math.min(Math.max(Y, 14), M.H - 12);
+  ctx.fillStyle = "rgba(255,255,255,.96)"; ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.roundRect(X - w / 2, Y - 10, w, 20, 10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#14305f"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(text, X, Y + .5); ctx.textBaseline = "alphabetic";
+}
+function zone(x, y, r5, r9, color, label) {
+  const R9 = r9 * M.view.s, big = R9 > Math.min(M.W, M.H) * .38;
+  circ(x, y, r9, big ? null : color + "14", color + "d0", 1.8, big ? [8, 6] : null);   // 90% circle: soft fill, or outline only when it would swamp the map
+  circ(x, y, r5, color + "2a", color, 1.5, [4, 3]);                                      // 50% circle
+  if (label) tag(label, sx(x), sy(y) - Math.max(R9, 14) - 14, color);
+}
+function verifiedLink(a, pin, color, oldPin, eo, en) {
+  const T = [a.tx, a.ty];
+  ctx.setLineDash([5, 4]); ctx.strokeStyle = "#8a93a5"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(sx(oldPin[0]), sy(oldPin[1])); ctx.lineTo(sx(T[0]), sy(T[1])); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = color; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(sx(pin[0]), sy(pin[1])); ctx.lineTo(sx(T[0]), sy(T[1])); ctx.stroke();
+  tag("old pin: " + fmt(eo) + " m off", (sx(oldPin[0]) + sx(T[0])) / 2, (sy(oldPin[1]) + sy(T[1])) / 2, "#8a93a5");
+  tag("our pin: " + fmt(en) + " m off", (sx(pin[0]) + sx(T[0])) / 2, (sy(pin[1]) + sy(T[1])) / 2 + 24, color);
+  diamond(T[0], T[1], 9, "#111");
+}
+function focusOn(x, y, r9, force) {
+  const fit = Math.min(Math.max(Math.min(M.W, M.H) * .5 / (Math.max(r9, 70) * 1.5), .12), 2.4), X = sx(x), Y = sy(y), off = X < 40 || Y < 40 || X > M.W - 40 || Y > M.H - 40;
+  if (force || off || M.view.s < fit * .5) { M.view.x = x; M.view.y = y; if (force || M.view.s < fit * .5) M.view.s = fit; }
+  draw();
+}
 function draw() {
   if (!M.town || !M.data[M.town]) return;
   const T = M.data[M.town]; ctx.clearRect(0, 0, M.W, M.H);
@@ -156,19 +180,21 @@ function draw() {
   T.localities.forEach(l => ctx.fillText(l.locality_name, sx(l.centroid_x), sy(l.centroid_y)));
   if ($("#lLm").checked) T.landmarks.forEach(l => { ctx.fillStyle = "#7a6bb0"; ctx.fillRect(sx(l.x) - 3, sy(l.y) - 3, 6, 6); if (M.view.s > .25) { ctx.fillStyle = "rgba(100,86,150,.95)"; ctx.font = "10px Inter, sans-serif"; ctx.textAlign = "left"; ctx.fillText(l.name, sx(l.x) + 6, sy(l.y) + 3); ctx.textAlign = "center"; } });
   const A = T.addresses, inView = a => { const X = sx(a.x), Y = sy(a.y); return X > -60 && X < M.W + 60 && Y > -60 && Y < M.H + 60; };
-  if ($("#lCirc").checked && M.view.s > .1) A.forEach(a => { if (inView(a)) circ(a.x, a.y, a.r9, TC[a.t] + "14", TC[a.t] + "55", 1); });
+  if ($("#lCirc").checked) { if (M.view.s < .5) tag("Zoom in to see every address's circle", M.W / 2, 22, "#8a93a5"); else { let n = 0; A.forEach(a => { const R = a.r9 * M.view.s; if (n > 160 || R < 6 || R > 70 || !inView(a)) return; n++; circ(a.x, a.y, a.r9, null, TC[a.t] + "66", 1); }); } }
   if ($("#lOld").checked) A.forEach(a => { ctx.fillStyle = "rgba(138,147,165,.55)"; ctx.fillRect(sx(a.ox) - 1.6, sy(a.oy) - 1.6, 3.2, 3.2); });
   if ($("#lNew").checked) A.forEach(a => { ctx.fillStyle = TC[a.t]; ctx.beginPath(); ctx.arc(sx(a.x), sy(a.y), a.v ? 2.8 : 2.3, 0, 6.2832); ctx.fill(); });
-  if ($("#lTruth").checked) A.forEach(a => { if (a.tx === undefined) return; ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sx(a.ox), sy(a.oy)); ctx.lineTo(sx(a.tx), sy(a.ty)); ctx.stroke(); diamond(a.tx, a.ty, 5, "#111"); });
+  if ($("#lTruth").checked) A.forEach(a => { if (a.tx !== undefined) diamond(a.tx, a.ty, 5, "#111"); });
   const s = M.sel; if (s && s.town === M.town) {
-    const a = s.a; circ(a.x, a.y, a.r9, TC[a.t] + "24", TC[a.t], 2); circ(a.x, a.y, a.r5, TC[a.t] + "38", TC[a.t], 1.5);
-    ctx.setLineDash([5, 4]); ctx.strokeStyle = "#8a93a5"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx(a.ox), sy(a.oy)); ctx.lineTo(sx(a.x), sy(a.y)); ctx.stroke(); ctx.setLineDash([]);
-    ring(a.ox, a.oy, 6.5, "#8a93a5"); dot(a.x, a.y, 7.5, TC[a.t]); if (a.tx !== undefined) diamond(a.tx, a.ty, 9, "#111");
+    const a = s.a; zone(a.x, a.y, a.r5, a.r9, TC[a.t], "90% circle: " + fmt(a.r9) + " m");
+    if (a.tx !== undefined) verifiedLink(a, [a.x, a.y], TC[a.t], [a.ox, a.oy], a.eo, a.en);
+    else { ctx.setLineDash([5, 4]); ctx.strokeStyle = "#8a93a5"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx(a.ox), sy(a.oy)); ctx.lineTo(sx(a.x), sy(a.y)); ctx.stroke(); ctx.setLineDash([]); }
+    ring(a.ox, a.oy, 6.5, "#8a93a5"); dot(a.x, a.y, 7.5, TC[a.t]);
   }
   const L = M.loc; if (L && L.town === M.town) {
-    circ(L.pin.x, L.pin.y, L.r90, TC[L.t] + "22", TC[L.t], 2); circ(L.pin.x, L.pin.y, L.r50, TC[L.t] + "38", TC[L.t], 1.5);
-    ctx.setLineDash([5, 4]); ctx.strokeStyle = "#8a93a5"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx(L.old.x), sy(L.old.y)); ctx.lineTo(sx(L.pin.x), sy(L.pin.y)); ctx.stroke(); ctx.setLineDash([]);
-    ring(L.old.x, L.old.y, 7, "#8a93a5"); dot(L.pin.x, L.pin.y, 9, TC[L.t]); if (L.truth) diamond(L.truth[0], L.truth[1], 10, "#111");
+    zone(L.pin.x, L.pin.y, L.r50, L.r90, TC[L.t], "90% circle: " + fmt(L.r90) + " m");
+    if (L.truth) verifiedLink({ tx: L.truth[0], ty: L.truth[1] }, [L.pin.x, L.pin.y], TC[L.t], [L.old.x, L.old.y], L.oldErr, L.newErr);
+    else { ctx.setLineDash([5, 4]); ctx.strokeStyle = "#8a93a5"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sx(L.old.x), sy(L.old.y)); ctx.lineTo(sx(L.pin.x), sy(L.pin.y)); ctx.stroke(); ctx.setLineDash([]); }
+    ring(L.old.x, L.old.y, 7, "#8a93a5"); dot(L.pin.x, L.pin.y, 9, TC[L.t]);
   }
   const K = M.teach; if (K && K.town === M.town) {
     K.res.neighbours.forEach(n => { arrow(n.before, n.after, "#1d4486", 1.8); dot(n.after[0], n.after[1], 4, "#1d4486"); ring(n.before[0], n.before[1], 3.6, "#8a93a5"); });
@@ -206,17 +232,17 @@ async function select(id, fly = true) {
   if (!a) { $("#inspectBody").innerHTML = `<div class="err">No address with ID “${esc(id)}”.</div>`; return; }
   if (tid !== M.town) await setTown(tid, true);
   M.sel = { a, town: tid }; M.loc = null; M.teach = null; if (M.tab !== "teach") M.pick = null;
-  if (fly && M.view.s < .5) flyTo(a.x, a.y, 1.1); else draw();
+  focusOn(a.x, a.y, a.r9, fly);
   renderInspect(); teachUpdate(); renderTeachResult(null);
 }
 function renderInspect() {
   const el = $("#inspectBody"), s = M.sel;
-  if (!s) { el.innerHTML = `<div class="box"><h4>Pick an address</h4>Click any pin on the map, search an ID, or switch to <b>Locate an address</b> to type your own. Surveyed addresses show a black diamond: the true location, so you can see old vs new error.</div>`; return; }
+  if (!s) { el.innerHTML = `<div class="box"><h4>Pick an address</h4>Click any pin on the map, search an ID, or switch to <b>Locate an address</b> to type your own. Addresses marked <b>field-verified</b> have a known true location (black diamond), so you can see exactly how far each pin was off. That location is hidden from the model and used only to grade it.</div>`; return; }
   const a = s.a, why = a.w.split("|").map(w => w.replace(/_/g, " ").toLowerCase()).join(", ");
   el.innerHTML = `<div class="addr">${esc(a.s)}</div>
   <div><span class="pill ${TNAME[a.t]}">${TNAME[a.t]} confidence</span> &nbsp;<b>${esc(a.a.replace(/_/g, " "))}</b></div>
   <div class="kv"><span>ID</span><span>${a.id} &middot; ${esc(M.data[s.town].name)}</span><span>90% circle</span><span>${fmt(a.r9)} m</span><span>50% circle</span><span>${fmt(a.r5)} m</span><span>Moved from old pin</span><span>${fmt(Math.hypot(a.x - a.ox, a.y - a.oy))} m</span><span>Based on</span><span>${esc(a.m.replace(/_/g, " "))}${a.v ? " (own field visit)" : ""}</span><span>Why</span><span>${esc(why)}</span></div>
-  ${a.tx !== undefined ? `<div class="compare"><div class="old"><small>old geocoder</small><b>${fmt(a.eo)} m</b></div><div class="new"><small>our pin</small><b>${fmt(a.en)} m</b></div></div><p class="muted small">Distance from the surveyed true location. ${a.en <= a.r9 ? "The truth is inside our 90% circle." : "The truth is outside the 90% circle (expected for about 1 in 10)."}</p>` : ""}
+  ${a.tx !== undefined ? `<div class="compare"><div class="old"><small>old geocoder</small><b>${fmt(a.eo)} m</b></div><div class="new"><small>our pin</small><b>${fmt(a.en)} m</b></div></div><div class="box"><h4>Field-verified address</h4>The exact location of this address was verified on the ground (black diamond). The model never saw it. ${a.en <= a.r9 ? "It sits inside our 90% circle." : "It sits just outside our 90% circle, which is expected for about 1 in 10 addresses."}</div>` : ""}
   <div class="box"><h4>Directions for the agent (work offline)</h4>${esc(a.d)}${a.dl ? `<br><span class="muted small">${esc(a.dl)}</span>` : ""}</div>`;
 }
 $("#searchGo").onclick = () => { const v = $("#searchId").value.trim().toUpperCase(); if (v) select(v); };
@@ -236,11 +262,11 @@ $("#locGo").onclick = async () => {
   const r = await postJSON("/api/locate", { text, town }); $("#locGo").disabled = false;
   if (r.error) { body.innerHTML = `<div class="err">${esc(r.error)}</div>`; return; }
   await setTown(town, true);
-  M.sel = null; M.teach = null; M.loc = { town, pin: r.pin, old: r.old_pin, r50: r.radius_50, r90: r.radius_90, t: r.tier[0], truth: ex ? ex.truth : null };
-  flyTo(r.pin.x, r.pin.y, 1.0); renderInspect();
+  M.sel = null; M.teach = null; M.loc = { town, pin: r.pin, old: r.old_pin, r50: r.radius_50, r90: r.radius_90, t: r.tier[0], truth: ex ? ex.truth : null, oldErr: ex ? ex.old_error : 0, newErr: ex ? Math.hypot(r.pin.x - ex.truth[0], r.pin.y - ex.truth[1]) : 0 };
+  focusOn(r.pin.x, r.pin.y, r.radius_90, true); renderInspect();
   const p = r.parsed, bits = [r.locality_name && "locality: " + r.locality_name, p.cross && p.main && `${p.cross}th cross / ${p.main}th main`, p.gali && "gali " + p.gali, p.block && p.road && `block ${p.block.toUpperCase()}, road ${p.road}`, p.ward && "ward " + p.ward, p.lm_type && "landmark: " + p.lm_type.replace(/_/g, " ")].filter(Boolean);
   let cmp = `<div class="compare"><div class="old"><small>old geocoder placed it</small><b>${fmt(r.moved_m)} m</b><small>from our pin</small></div><div class="new"><small>our 90% circle</small><b>${fmt(r.radius_90)} m</b><small>radius</small></div></div>`;
-  if (ex) { cmp = `<div class="compare"><div class="old"><small>old geocoder error</small><b>${fmt(ex.old_error)} m</b></div><div class="new"><small>our error</small><b>${fmt(Math.hypot(r.pin.x - ex.truth[0], r.pin.y - ex.truth[1]))} m</b></div></div><p class="muted small">Measured against the surveyed true location (black diamond). This address has no visit, so the model never saw its location.</p>`; }
+  if (ex) { cmp = `<div class="compare"><div class="old"><small>old geocoder error</small><b>${fmt(ex.old_error)} m</b></div><div class="new"><small>our error</small><b>${fmt(Math.hypot(r.pin.x - ex.truth[0], r.pin.y - ex.truth[1]))} m</b></div></div><p class="muted small">Measured against the field-verified location (black diamond). This address has no visit, so the model never saw its location.</p>`; }
   body.innerHTML = `<div style="margin-top:12px"><span class="pill ${r.tier}">${r.tier} confidence</span> &nbsp;<b>${esc(r.action.replace(/_/g, " "))}</b></div>
    <p class="muted small" style="margin:6px 0">${esc(r.advice)}</p>${cmp}
    <div class="box"><h4>Directions</h4>${esc(r.directions)}${r.directions_local ? `<br><span class="muted small">${esc(r.directions_local)}</span>` : ""}</div>

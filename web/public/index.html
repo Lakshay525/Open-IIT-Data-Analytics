@@ -34,7 +34,7 @@
       <a class="btn ghost" href="#solution">How it works</a>
     </div>
     <ul class="kpis" id="heroKpis">
-      <li><b>376 m &rarr; 46 m</b><span>median error on 100 surveyed addresses</span></li>
+      <li><b>376 m &rarr; 46 m</b><span>median error on 100 field-verified addresses</span></li>
       <li><b>91%</b><span>of true locations fall inside our 90% circle</span></li>
       <li><b>321 m &rarr; 126 m</b><span>for addresses nobody has visited yet</span></li>
     </ul>
@@ -53,7 +53,7 @@
         <div class="stat-row">
           <div class="stat"><b>376 m</b><span>median error of the old pin</span></div>
           <div class="stat"><b>1 in 4</b><span>visits end &ldquo;not traceable&rdquo;</span></div>
-          <div class="stat"><b>&#8377;150&ndash;400</b><span>cost of every productive visit</span></div>
+          <div class="stat"><b>&#8377;150 to 400</b><span>cost of every productive visit</span></div>
         </div>
       </div>
       <figure class="card chart-card">
@@ -81,10 +81,10 @@
     <div class="clues card">
       <h3>The clues behind every pin</h3>
       <div class="clue-grid">
-        <div class="clue"><i style="--w:96%"></i><b>Own field visit</b><span>10&ndash;30 m</span></div>
-        <div class="clue"><i style="--w:88%"></i><b>Same-street neighbours</b><span>55&ndash;85 m</span></div>
-        <div class="clue"><i style="--w:80%"></i><b>Street-number grid</b><span>30&ndash;100 m</span></div>
-        <div class="clue"><i style="--w:56%"></i><b>Landmarks</b><span>100&ndash;200 m</span></div>
+        <div class="clue"><i style="--w:96%"></i><b>Own field visit</b><span>10 to 30 m</span></div>
+        <div class="clue"><i style="--w:88%"></i><b>Same-street neighbours</b><span>55 to 85 m</span></div>
+        <div class="clue"><i style="--w:80%"></i><b>Street-number grid</b><span>30 to 100 m</span></div>
+        <div class="clue"><i style="--w:56%"></i><b>Landmarks</b><span>100 to 200 m</span></div>
         <div class="clue"><i style="--w:14%"></i><b>Old geocoder pin</b><span>up to 1.25 km</span></div>
       </div>
       <p class="note">Bar length shows how much each clue is trusted. In numbered layouts &ldquo;5th Cross, 3rd Main&rdquo; is literally a coordinate system, so a per-locality fit can place streets nobody has visited yet.</p>
@@ -114,7 +114,7 @@
             <label><input type="checkbox" id="lNew" checked> Our pin</label>
             <label><input type="checkbox" id="lCirc"> Circles</label>
             <label><input type="checkbox" id="lLm" checked> Landmarks</label>
-            <label><input type="checkbox" id="lTruth" checked> Survey truth</label>
+            <label title="100 addresses whose exact location was verified on the ground. The model never sees it; it is used only to grade the pins."><input type="checkbox" id="lTruth"> Verified locations</label>
           </div>
         </div>
         <div class="map-wrap">
@@ -122,7 +122,7 @@
           <div class="map-hint" id="mapHint">Scroll to zoom, drag to pan, click a pin</div>
           <div class="legend">
             <span><i class="d g"></i>High</span><span><i class="d a"></i>Medium</span><span><i class="d r"></i>Low</span>
-            <span><i class="d o"></i>Old pin</span><span><i class="dm"></i>True location</span>
+            <span><i class="d o"></i>Old pin</span><span><i class="dm"></i>Verified true location</span>
           </div>
           <div class="mapbtns"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">&minus;</button><button id="zoomFit" aria-label="Fit to town" title="Fit to town">&#9635;</button></div>
         </div>
@@ -170,12 +170,12 @@
   <div class="wrap wide">
     <p class="kicker">Results</p>
     <h2>Tested on held-out ground truth.</h2>
-    <p class="body narrow">Every accuracy figure is out-of-fold. Confidence circles are calibrated on data the model never saw and verified on independent survey truth.</p>
+    <p class="body narrow">Every accuracy figure is out-of-fold. Confidence circles are calibrated on data the model never saw and checked against independent field-verified locations.</p>
     <div class="metric-row" id="metricRow"></div>
     <div class="grid2">
-      <figure class="card chart-card"><figcaption><b>Error distribution</b><span>100 surveyed addresses, share of addresses within a distance</span></figcaption><div id="chartCdf" class="chart"></div></figure>
+      <figure class="card chart-card"><figcaption><b>Error distribution</b><span>100 field-verified addresses, share within a distance</span></figcaption><div id="chartCdf" class="chart"></div></figure>
       <figure class="card chart-card"><figcaption><b>It learns from visits</b><span>Median error for addresses with no visit as the system learns from more visited addresses</span></figcaption><div id="chartLearn" class="chart"></div></figure>
-      <figure class="card chart-card"><figcaption><b>What each layer adds</b><span>Median error, 100 surveyed addresses</span></figcaption><div id="chartAblation" class="chart"></div></figure>
+      <figure class="card chart-card"><figcaption><b>What each layer adds</b><span>Median error, 100 field-verified addresses</span></figcaption><div id="chartAblation" class="chart"></div></figure>
       <figure class="card chart-card"><figcaption><b>Are the circles honest?</b><span>Observed vs promised coverage on held-out data</span></figcaption><div id="chartRel" class="chart"></div></figure>
     </div>
     <div class="card tier-card"><h3>Confidence tiers separate easy from hard addresses</h3><div id="tierTable"></div></div>
