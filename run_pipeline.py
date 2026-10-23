@@ -15,6 +15,7 @@ Stages
   confidence   calibrated radii, tiers, directions-> outputs/predictions.csv, ps2_location_confidence.csv, offline_pack/
   analysis     impact, learning curve, pilot power-> outputs/results/impact_*.csv, learning_curve.*, pilot_power.csv
   present      figures, demo map, summary         -> outputs/demo_map.html, summary.md
+  webassets    live web app bundle                -> web/api/_lib/*, web/public/data/*.json
   notebook     analysis notebook (optional)       -> notebooks/analysis.ipynb
   tests        tests/*.py
 Guard: folds.csv and evidence.csv must not change silently (content hashes compared before/after).
@@ -72,9 +73,10 @@ def main():
     run("geocoder.confidence")
     run("geocoder.analysis")
     run("geocoder.present")
+    run("geocoder.webassets")
     if not a.fast:
         run("geocoder.notebook")
-    for t in ("tests.test_data", "tests.test_model", "tests.test_outputs"):
+    for t in ("tests.test_data", "tests.test_model", "tests.test_outputs", "tests.test_web"):
         if a.fast and t == "tests.test_data":
             continue  # needs the stress-test output
         run(t)

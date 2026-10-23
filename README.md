@@ -15,6 +15,17 @@ python run_pipeline.py --retune     # also refits the model's error settings
 
 Then open `outputs/demo_map.html` (a single offline page: old pin vs our pin vs true location, confidence circles, directions).
 
+## Live demo (web app)
+
+`web/` is a deployable prototype: a front end plus Python serverless functions running the same model. Try an address, or confirm a visit and watch the neighbouring pins move.
+
+```bash
+pip install numpy pandas
+python web/dev_server.py          # http://127.0.0.1:8000
+```
+
+Deploy on Vercel with Root Directory = `web` (steps in `docs/deploy.md`).
+
 ## Results (synthetic data, 100 surveyed addresses, all out-of-fold)
 
 | | Old geocoder | This project |
@@ -41,7 +52,8 @@ More numbers are written to `outputs/summary.md` on every run.
 ```
 run_pipeline.py        one command that rebuilds everything
 geocoder/              the code (one module per stage; scoring.py is the shared metre-error scorer)
-tests/                 data checks, leakage checks, calibration and direction checks
+tests/                 data checks, leakage checks, calibration, directions and web-app checks
+web/                   live demo: public/ (front end), api/ (serverless functions), dev_server.py, vercel.json
 data/                  supplied inputs (synthetic)
 outputs/               pins.csv, predictions.csv, ps2_location_confidence.csv, evidence.csv, folds.csv,
                        offline_pack/, demo_map.html, summary.md, results/ (diagnostic tables and figures)
@@ -58,7 +70,7 @@ Main deliverable columns are described in `docs/design.md` (appendix). `outputs/
 
 ## Tests
 
-`python -m tests.test_data`, `python -m tests.test_model`, `python -m tests.test_outputs` (the pipeline runs them last).
+`python -m tests.test_data`, `python -m tests.test_model`, `python -m tests.test_outputs`, `python -m tests.test_web` (the pipeline runs them last).
 
 ## Known limits
 

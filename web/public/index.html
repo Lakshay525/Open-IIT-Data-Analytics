@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Credit Nirvana Geocoder | Team AnalyticsOnTop</title>
+<meta name="description" content="An address geocoder that learns from field visits: calibrated pins, confidence radii and offline directions for field collections.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2a9 9 0 0 0-9 9c0 7 9 19 9 19s9-12 9-19a9 9 0 0 0-9-9z' fill='%231d4486'/%3E%3Ccircle cx='16' cy='11' r='3.6' fill='%23f5c542'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav" id="top">
+  <a class="brand" href="#top" aria-label="Credit Nirvana Geocoder">
+    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><path d="M16 2a9 9 0 0 0-9 9c0 7 9 19 9 19s9-12 9-19a9 9 0 0 0-9-9z" fill="#f5c542"/><circle cx="16" cy="11" r="3.6" fill="#14305f"/></svg>
+    <span>Credit Nirvana <b>Geocoder</b></span>
+  </a>
+  <nav class="links" aria-label="Sections">
+    <a href="#problem">Problem</a><a href="#solution">Solution</a><a href="#demo">Live demo</a><a href="#results">Results</a><a href="#tech">Technology</a><a href="#team">Team</a>
+  </nav>
+  <a class="btn gold small" href="#demo">Try the demo</a>
+</header>
+
+<main>
+<!-- ============================================================ HERO -->
+<section class="hero">
+  <canvas id="heroCanvas" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <p class="eyebrow">Open IIT Data Analytics &nbsp;|&nbsp; Problem Statement 3 &nbsp;|&nbsp; CreditNirvana</p>
+    <h1>Every field visit<br>teaches the map.</h1>
+    <p class="lead">An address geocoder for field collections that finds the house, says how sure it is, and keeps getting better as agents confirm borrowers on the ground.</p>
+    <div class="cta">
+      <a class="btn gold" href="#demo">Open the live demo</a>
+      <a class="btn ghost" href="#solution">How it works</a>
+    </div>
+    <ul class="kpis" id="heroKpis">
+      <li><b>376 m &rarr; 46 m</b><span>median error on 100 surveyed addresses</span></li>
+      <li><b>91%</b><span>of true locations fall inside our 90% circle</span></li>
+      <li><b>321 m &rarr; 126 m</b><span>for addresses nobody has visited yet</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================ PROBLEM -->
+<section id="problem" class="section">
+  <div class="wrap">
+    <p class="kicker">The problem</p>
+    <h2>The pin starts the agent hundreds of metres from the house.</h2>
+    <div class="two">
+      <div>
+        <p class="body">Commercial geocoders drop an Indian address such as <em>&ldquo;near Hanuman temple, behind ration shop, 2nd cross&rdquo;</em> at the pincode or locality centre. Agents spend the day searching, and one visit in four ends <b>&ldquo;address not traceable&rdquo;</b>.</p>
+        <p class="body">The right answer already exists: the GPS point where an agent actually met the borrower. It sits in the visit log and never flows back into the address record.</p>
+        <div class="stat-row">
+          <div class="stat"><b>376 m</b><span>median error of the old pin</span></div>
+          <div class="stat"><b>1 in 4</b><span>visits end &ldquo;not traceable&rdquo;</span></div>
+          <div class="stat"><b>&#8377;150&ndash;400</b><span>cost of every productive visit</span></div>
+        </div>
+      </div>
+      <figure class="card chart-card">
+        <figcaption><b>The farther the old pin, the more visits fail</b><span>Not-traceable rate by distance from old pin to the confirmed location</span></figcaption>
+        <div id="chartImpact" class="chart"></div>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SOLUTION -->
+<section id="solution" class="section tint">
+  <div class="wrap">
+    <p class="kicker">Our solution</p>
+    <h2>Combine every weak clue by how reliable it is.</h2>
+    <p class="body narrow">The old pin becomes one clue among several. We trust each clue in proportion to its reliability, drop any that clash with the rest, and tell the field team honestly how sure we are.</p>
+
+    <div class="steps">
+      <article class="card step"><span class="num">1</span><h3>Clean the visits</h3><p>Each noisy GPS trail becomes one trusted point with a role and an uncertainty. Reused photos and repeated stops are down-weighted.</p></article>
+      <article class="card step"><span class="num">2</span><h3>Read the address</h3><p>A multilingual parser handles English, Hinglish, Kanglish, Devanagari and Kannada, with typos, and finds locality, street numbers and landmarks.</p></article>
+      <article class="card step"><span class="num">3</span><h3>Fuse the clues</h3><p>Own visit, same-street neighbours, the street-number grid, landmarks and the old pin are combined into one pin.</p></article>
+      <article class="card step"><span class="num">4</span><h3>Say how sure</h3><p>Calibrated 50% and 90% circles, a confidence tier with a suggested action, and offline landmark directions.</p></article>
+    </div>
+
+    <div class="clues card">
+      <h3>The clues behind every pin</h3>
+      <div class="clue-grid">
+        <div class="clue"><i style="--w:96%"></i><b>Own field visit</b><span>10&ndash;30 m</span></div>
+        <div class="clue"><i style="--w:88%"></i><b>Same-street neighbours</b><span>55&ndash;85 m</span></div>
+        <div class="clue"><i style="--w:80%"></i><b>Street-number grid</b><span>30&ndash;100 m</span></div>
+        <div class="clue"><i style="--w:56%"></i><b>Landmarks</b><span>100&ndash;200 m</span></div>
+        <div class="clue"><i style="--w:14%"></i><b>Old geocoder pin</b><span>up to 1.25 km</span></div>
+      </div>
+      <p class="note">Bar length shows how much each clue is trusted. In numbered layouts &ldquo;5th Cross, 3rd Main&rdquo; is literally a coordinate system, so a per-locality fit can place streets nobody has visited yet.</p>
+    </div>
+
+    <div class="tiers">
+      <div class="tier t-h"><b>High confidence</b><span>90% circle &le; 60 m</span><p>Visit now</p></div>
+      <div class="tier t-m"><b>Medium confidence</b><span>90% circle &le; 300 m</span><p>Visit with directions</p></div>
+      <div class="tier t-l"><b>Low confidence</b><span>90% circle &gt; 300 m</span><p>Verify first, never auto-mark &ldquo;not traceable&rdquo;</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ LIVE DEMO -->
+<section id="demo" class="section">
+  <div class="wrap wide">
+    <p class="kicker">Live demo</p>
+    <h2>See it work on the three towns, and teach it a new visit.</h2>
+    <p class="body narrow">Explore every address, type a free-text address and get a pin, a calibrated circle and directions in about a second, or confirm a field visit and watch the neighbouring pins move.</p>
+
+    <div class="demo">
+      <div class="map-col">
+        <div class="map-bar">
+          <div class="seg" id="townTabs" role="tablist" aria-label="Town"></div>
+          <div class="toggles">
+            <label><input type="checkbox" id="lOld" checked> Old pin</label>
+            <label><input type="checkbox" id="lNew" checked> Our pin</label>
+            <label><input type="checkbox" id="lCirc"> Circles</label>
+            <label><input type="checkbox" id="lLm" checked> Landmarks</label>
+            <label><input type="checkbox" id="lTruth" checked> Survey truth</label>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <canvas id="map" tabindex="0" aria-label="Interactive map of addresses"></canvas>
+          <div class="map-hint" id="mapHint">Scroll to zoom, drag to pan, click a pin</div>
+          <div class="legend">
+            <span><i class="d g"></i>High</span><span><i class="d a"></i>Medium</span><span><i class="d r"></i>Low</span>
+            <span><i class="d o"></i>Old pin</span><span><i class="dm"></i>True location</span>
+          </div>
+          <div class="mapbtns"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">&minus;</button><button id="zoomFit" aria-label="Fit to town" title="Fit to town">&#9635;</button></div>
+        </div>
+      </div>
+
+      <aside class="panel card">
+        <div class="tabs" role="tablist">
+          <button class="tab on" data-tab="inspect" role="tab">Inspect</button>
+          <button class="tab" data-tab="locate" role="tab">Locate an address</button>
+          <button class="tab" data-tab="teach" role="tab">Teach a visit</button>
+        </div>
+
+        <div class="tabpane on" id="pane-inspect">
+          <div class="search"><input id="searchId" type="search" placeholder="Search an address ID, e.g. AD000683" aria-label="Search address ID"><button class="btn small" id="searchGo">Find</button></div>
+          <div id="inspectBody"></div>
+        </div>
+
+        <div class="tabpane" id="pane-locate">
+          <p class="muted">Type any address in the supplied towns. The commercial geocoder would drop it at the locality centre; we do better.</p>
+          <label class="field">Town
+            <select id="locTown"></select>
+          </label>
+          <label class="field">Address
+            <textarea id="locText" rows="3" maxlength="300" placeholder="e.g. 159/2, 3rd Cross, 8th Main, opposite PDS Shop, Vidya Nagar, Kaveripura - 960104"></textarea>
+          </label>
+          <div class="chips" id="locExamples"></div>
+          <button class="btn gold block" id="locGo">Locate</button>
+          <div id="locBody" aria-live="polite"></div>
+        </div>
+
+        <div class="tabpane" id="pane-teach">
+          <p class="muted">Confirm the borrower at a spot and see every unvisited neighbour on the same street re-estimate, with no retraining.</p>
+          <div class="chips" id="teachScenarios"></div>
+          <p class="muted small" id="teachPick">Or select an address in <b>Inspect</b>, then click the map to place the visit.</p>
+          <button class="btn gold block" id="teachGo" disabled>Log this visit</button>
+          <div id="teachBody" aria-live="polite"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ RESULTS -->
+<section id="results" class="section tint">
+  <div class="wrap wide">
+    <p class="kicker">Results</p>
+    <h2>Tested on held-out ground truth.</h2>
+    <p class="body narrow">Every accuracy figure is out-of-fold. Confidence circles are calibrated on data the model never saw and verified on independent survey truth.</p>
+    <div class="metric-row" id="metricRow"></div>
+    <div class="grid2">
+      <figure class="card chart-card"><figcaption><b>Error distribution</b><span>100 surveyed addresses, share of addresses within a distance</span></figcaption><div id="chartCdf" class="chart"></div></figure>
+      <figure class="card chart-card"><figcaption><b>It learns from visits</b><span>Median error for addresses with no visit as the system learns from more visited addresses</span></figcaption><div id="chartLearn" class="chart"></div></figure>
+      <figure class="card chart-card"><figcaption><b>What each layer adds</b><span>Median error, 100 surveyed addresses</span></figcaption><div id="chartAblation" class="chart"></div></figure>
+      <figure class="card chart-card"><figcaption><b>Are the circles honest?</b><span>Observed vs promised coverage on held-out data</span></figcaption><div id="chartRel" class="chart"></div></figure>
+    </div>
+    <div class="card tier-card"><h3>Confidence tiers separate easy from hard addresses</h3><div id="tierTable"></div></div>
+  </div>
+</section>
+
+<!-- ============================================================ TECHNOLOGY -->
+<section id="tech" class="section">
+  <div class="wrap">
+    <p class="kicker">Technology</p>
+    <h2>A probabilistic evidence-fusion model, not a black box.</h2>
+    <div class="two">
+      <div>
+        <p class="body">Each clue gives a location estimate &mu;<sub>i</sub> and an uncertainty &sigma;<sub>i</sub>. They are combined by inverse-variance weighting, and a robust gate drops any clue that disagrees with the rest by more than about 3.2&sigma;.</p>
+        <div class="formula" aria-label="Fusion formula">x&#770; = &Sigma; w<sub>i</sub>&mu;<sub>i</sub> / &Sigma; w<sub>i</sub> &nbsp;&nbsp; with &nbsp; w<sub>i</sub> = 1 / &sigma;<sub>i</sub><sup>2</sup></div>
+        <ul class="ticks">
+          <li><b>Fitted without the answer key:</b> each visited address's own visit is hidden and predicted from everything else (hide-and-predict, Huber loss).</li>
+          <li><b>Calibrated confidence:</b> split conformal prediction gives 50% and 90% radii.</li>
+          <li><b>Learns online:</b> a confirmed visit is new evidence for the whole street, about 0.4 s, no retraining.</li>
+          <li><b>Explainable:</b> every pin lists its clues and reason codes.</li>
+          <li><b>Fake-visit safeguards:</b> reused photos, repeated stops and a per-agent cap.</li>
+        </ul>
+      </div>
+      <div class="card pipe">
+        <h3>Pipeline</h3>
+        <div class="pipeline">
+          <div class="pn">Inputs from CN<small>address text, old pin, visit trails</small></div><div class="pa">&darr;</div>
+          <div class="pn">Visit cleaning<small>one trusted point per visit</small></div><div class="pa">&darr;</div>
+          <div class="pn hl">Pin model<small>probabilistic evidence fusion</small></div><div class="pa">&darr;</div>
+          <div class="pn">Calibration<small>conformal radii, tiers, directions</small></div><div class="pa">&darr;</div>
+          <div class="pn">Field app &middot; planner &middot; records<small>offline pack, about 200 bytes per address</small></div>
+        </div>
+        <p class="note">Python &middot; NumPy &middot; pandas &middot; scikit-learn &middot; deployed on Vercel</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ TEAM -->
+<section id="team" class="section tint">
+  <div class="wrap">
+    <p class="kicker">Team</p>
+    <h2>AnalyticsOnTop</h2>
+    <p class="body narrow">Indian Institute of Technology Kharagpur &middot; Open IIT Data Analytics &middot; Problem Statement 3, CreditNirvana.</p>
+    <div class="team" id="teamGrid"></div>
+  </div>
+</section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><b>Credit Nirvana Geocoder</b><span>Address geocoder that learns from field visits</span></div>
+    <div><span>Team AnalyticsOnTop &middot; IIT Kharagpur</span><a href="https://github.com/Lakshay525/Open-IIT-Data-Analytics" rel="noopener">Source code on GitHub</a></div>
+  </div>
+</footer>
+
+<script src="app.js" defer></script>
+</body>
+</html>
