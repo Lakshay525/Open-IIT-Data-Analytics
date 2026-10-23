@@ -1,6 +1,6 @@
 # Live demo: run locally and deploy on Vercel
 
-The `web/` folder is a complete, self-contained web app: a static front end (`web/public`) and three Python serverless functions (`web/api`)
+The `web/` folder is a complete, self-contained web app: a static front end (`web/public`) and three Python serverless functions (`web/api`, WSGI apps named `app`)
 that run the same model as the pipeline. Nothing outside `web/` is needed at run time.
 
 ## Run it locally
