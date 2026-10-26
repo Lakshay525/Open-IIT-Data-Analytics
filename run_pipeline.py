@@ -12,6 +12,7 @@ Stages
   parser       multilingual address parser        -> outputs/results/address_features.csv
   tuning       fit sigmas (optional)              -> outputs/results/pin_model_params.json
   evaluate     pin model, CV, ablation            -> outputs/pins.csv
+  benchmark    alternatives, sensitivity, errors  -> outputs/results/benchmark_*.csv, benchmark.png
   confidence   calibrated radii, tiers, directions-> outputs/predictions.csv, ps2_location_confidence.csv, offline_pack/
   analysis     impact, learning curve, pilot power-> outputs/results/impact_*.csv, learning_curve.*, pilot_power.csv
   present      figures, demo map, summary         -> outputs/demo_map.html, summary.md
@@ -70,6 +71,8 @@ def main():
     if a.retune:
         run("geocoder.tuning")
     run("geocoder.evaluate", "--skip-parse")
+    if not a.fast:
+        run("geocoder.benchmark")
     run("geocoder.confidence")
     run("geocoder.analysis")
     run("geocoder.present")

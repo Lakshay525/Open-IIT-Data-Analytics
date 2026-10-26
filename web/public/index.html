@@ -184,33 +184,46 @@
 
 <!-- ============================================================ TECHNOLOGY -->
 <section id="tech" class="section">
-  <div class="wrap">
-    <p class="kicker">Technology</p>
+  <div class="wrap wide">
+    <p class="kicker">Under the hood</p>
     <h2>A probabilistic evidence-fusion model, not a black box.</h2>
-    <div class="two">
-      <div>
-        <p class="body">Each clue gives a location estimate &mu;<sub>i</sub> and an uncertainty &sigma;<sub>i</sub>. They are combined by inverse-variance weighting, and a robust gate drops any clue that disagrees with the rest by more than about 3.2&sigma;.</p>
-        <div class="formula" aria-label="Fusion formula">x&#770; = &Sigma; w<sub>i</sub>&mu;<sub>i</sub> / &Sigma; w<sub>i</sub> &nbsp;&nbsp; with &nbsp; w<sub>i</sub> = 1 / &sigma;<sub>i</sub><sup>2</sup></div>
-        <ul class="ticks">
-          <li><b>Fitted without the answer key:</b> each visited address's own visit is hidden and predicted from everything else (hide-and-predict, Huber loss).</li>
-          <li><b>Calibrated confidence:</b> split conformal prediction gives 50% and 90% radii.</li>
-          <li><b>Learns online:</b> a confirmed visit is new evidence for the whole street, about 0.4 s, no retraining.</li>
-          <li><b>Explainable:</b> every pin lists its clues and reason codes.</li>
-          <li><b>Fake-visit safeguards:</b> reused photos, repeated stops and a per-agent cap.</li>
-        </ul>
-      </div>
-      <div class="card pipe">
-        <h3>Pipeline</h3>
-        <div class="pipeline">
-          <div class="pn">Inputs from CN<small>address text, old pin, visit trails</small></div><div class="pa">&darr;</div>
-          <div class="pn">Visit cleaning<small>one trusted point per visit</small></div><div class="pa">&darr;</div>
-          <div class="pn hl">Pin model<small>probabilistic evidence fusion</small></div><div class="pa">&darr;</div>
-          <div class="pn">Calibration<small>conformal radii, tiers, directions</small></div><div class="pa">&darr;</div>
-          <div class="pn">Field app &middot; planner &middot; records<small>offline pack, about 200 bytes per address</small></div>
-        </div>
-        <p class="note">Python &middot; NumPy &middot; pandas &middot; scikit-learn &middot; deployed on Vercel</p>
-      </div>
+    <p class="body narrow">Four ideas do the work. Each is small enough to audit, and each is tested on its own in the repository.</p>
+    <div class="tech-grid">
+      <article class="card tech">
+        <h3>1. Fuse clues by reliability</h3>
+        <div class="formula">x&#770; = &Sigma; w<sub>i</sub>&mu;<sub>i</sub> / &Sigma; w<sub>i</sub>, &nbsp; w<sub>i</sub> = 1 / &sigma;<sub>i</sub><sup>2</sup></div>
+        <p>Every clue gives a guess &mu;<sub>i</sub> and an error scale &sigma;<sub>i</sub> that depends on how many neighbours back it and how tightly they agree. The spread is inflated when clues disagree.</p>
+        <p><b>Robust gate.</b> The clue with the largest conflict <span class="mono">r<sub>i</sub> = |&mu;<sub>i</sub> &minus; x&#770;<sub>&minus;i</sub>| / &radic;(&sigma;<sub>i</sub><sup>2</sup> + 1/W<sub>&minus;i</sub>)</span> is dropped when r<sub>i</sub> &gt; 3.2, up to three times. Two or more agreeing visits are never gated away.</p>
+      </article>
+      <article class="card tech">
+        <h3>2. Street numbers are coordinates</h3>
+        <div class="formula">(x, y) = a + B&middot;(cross, main) &nbsp; per locality</div>
+        <p>A kernel-weighted local-linear regression, re-weighted to resist wrongly placed neighbours, predicts streets nobody has visited. Its predictive spread includes leverage, so a corner of the grid is trusted less than the middle.</p>
+        <p>This is the biggest gain after the visits themselves: removing it adds about 38 m to the median.</p>
+      </article>
+      <article class="card tech">
+        <h3>3. Fit without the answer key</h3>
+        <div class="formula">min &Sigma; Huber<sub>120 m</sub>( x&#770;<sub>hidden</sub> &minus; visit pin )</div>
+        <p>Each visited address has its own visit hidden and is predicted from everything else, so 1,134 addresses act as labels and the 100 field-verified ones stay clean. Tuning on half the localities and scoring on the other half gives 116 to 126 m, against 113 m in sample.</p>
+      </article>
+      <article class="card tech">
+        <h3>4. Honest circles</h3>
+        <div class="formula">r<sub>p</sub> = Q<sub>p</sub>( e / spread ) &middot; spread</div>
+        <p>Split conformal prediction, with a finite-sample quantile, per group (own visit, no visit, no locality in text). Radii are calibrated on data the model never saw and checked on different data.</p>
+        <p>Coverage is marginal, not guaranteed for every small stratum; the report says which strata are too small to conclude anything.</p>
+      </article>
     </div>
+
+    <div class="card bench">
+      <div class="bench-head">
+        <div><h3>Why not just use machine learning?</h3><p class="muted small">Every method gets the same clues. Median (blue) and 90th percentile (gold) error in metres.</p></div>
+        <div class="seg" id="benchTabs" role="tablist" aria-label="Test set"><button class="on" data-set="visited">Visited, visit hidden</button><button data-set="surveyed">Field-verified, out-of-fold</button></div>
+      </div>
+      <div id="chartBench" class="chart"></div>
+      <p class="note">Gradient-boosted trees on the parsed address fields are a strong competitor on the median. The fusion model is better in the tail, gives an explainable pin and a calibrated spread, and learns from a new visit without retraining. Equal weighting is worse than the best single clue; weighting by reliability is what halves the error.</p>
+    </div>
+
+    <p class="body narrow tech-links">Python, NumPy, pandas, scikit-learn, deployed on Vercel.</p>
   </div>
 </section>
 
@@ -228,7 +241,7 @@
 <footer class="foot">
   <div class="wrap foot-in">
     <div><b>Credit Nirvana Geocoder</b><span>Address geocoder that learns from field visits</span></div>
-    <div><span>Team AnalyticsOnTop &middot; IIT Kharagpur</span><a href="https://github.com/Lakshay525/Open-IIT-Data-Analytics" rel="noopener">Source code on GitHub</a></div>
+    <div><span>Team AnalyticsOnTop &middot; IIT Kharagpur</span></div>
   </div>
 </footer>
 

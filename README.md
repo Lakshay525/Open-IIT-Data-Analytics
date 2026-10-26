@@ -8,7 +8,7 @@ Commercial geocoders drop Indian addresses at the pincode or locality centre, so
 
 ```bash
 pip install -r requirements.txt
-python run_pipeline.py              # everything from the raw CSVs, about 5 minutes
+python run_pipeline.py              # everything from the raw CSVs, about 6 minutes
 python run_pipeline.py --fast       # skips the stress test, learning curve and notebook
 python run_pipeline.py --retune     # also refits the model's error settings
 ```
@@ -37,15 +37,19 @@ Deploy on Vercel with Root Directory = `web` (steps in `docs/deploy.md`).
 | No-visit addresses, large check (1,231), median | 321 m | **126 m** |
 | 90% radius contains the truth | n/a | **91%** (95% CI 84-95%) |
 
-More numbers are written to `outputs/summary.md` on every run.
+Every number on this page is regenerated in `outputs/summary.md` (which also compares the model with simpler and gradient-boosting alternatives). Evaluation rules and leakage controls: [`docs/methods.md`](docs/methods.md) section 9.
 
 ## How it works
 
-1. **Evidence** (`geocoder/evidence.py`): turns each noisy GPS trail into one trusted point with a role (met borrower, locked house, met at a shop, failed search...) and an uncertainty; reused photos and repeated stops are down-weighted and one agent's influence is capped (`geocoder/integrity.py` stress-tests this with synthetic fake visits).
-2. **Parser** (`geocoder/parser.py`): rule-based, multilingual (English, Hinglish, Kanglish; Latin, Devanagari, Kannada script; typo tolerant). Extracts locality, cross/main, gali/ward, block/road and landmark type.
-3. **Pin model** (`geocoder/model.py`): combines clues by trust (inverse variance) and drops a clue that contradicts the rest. Clues: the address's own visit, neighbours on the same street, a **street-number grid** (cross/main numbers are coordinates, so a per-locality regression places streets nobody has visited), same-landmark neighbours and the old pin. `PinModel.update()` adds new visits without retraining. Error settings are fitted by hiding each visited address's own visit and predicting it (`geocoder/tuning.py`); surveyed truth is never used for fitting.
-4. **Confidence** (`geocoder/confidence.py`): split conformal prediction turns the model's uncertainty into 50% / 90% radii, calibrated on data the model never saw; adds tiers, reason codes, text directions that work offline, a PS2 export and per-town offline packs.
-5. **Analyses** (`geocoder/analysis.py`): indicative field impact, learning curve (error falls as visits accumulate), pilot sample sizes. `geocoder/present.py` builds figures, the demo map and the summary. `geocoder/evaluate.py` runs the cross-validated evaluation and writes `outputs/pins.csv`.
+Five stages, each one module (details and equations in [`docs/methods.md`](docs/methods.md)):
+
+| Stage | Module | One line |
+|---|---|---|
+| Evidence | `evidence.py`, `integrity.py` | Each GPS trail becomes one trusted point with a role, an uncertainty (quantile model) and a trust weight; reused photos and repeated stops are down-weighted; a fake-visit stress test measures the damage. |
+| Parser | `parser.py` | Rule-based, multilingual, typo tolerant: locality, cross/main, gali/ward, block/road, landmark type. |
+| Pin model | `model.py`, `tuning.py` | Precision-weighted fusion of up to 12 clues with a robust gate; a per-locality street-number regression places streets nobody has visited; `update()` adds a visit without retraining; settings are fitted on visit pseudo-labels, never on surveyed truth. |
+| Confidence | `confidence.py` | Split conformal 50% / 90% radii per group, tiers, reason codes, offline directions, PS2 export, per-town packs. |
+| Evidence of benefit | `evaluate.py`, `benchmark.py`, `analysis.py` | Leakage-safe CV and ablation, comparison with simpler and ML alternatives, learning curve, impact mapping, pilot sample sizes. |
 
 ## Repository layout
 
@@ -58,21 +62,17 @@ data/                  supplied inputs (synthetic)
 outputs/               pins.csv, predictions.csv, ps2_location_confidence.csv, evidence.csv, folds.csv,
                        offline_pack/, demo_map.html, summary.md, results/ (diagnostic tables and figures)
 notebooks/             analysis.py (source) and analysis.ipynb (executed)
-docs/                  design.md (integration + file formats), pilot_plan.md, compliance.md
+docs/                  methods.md (equations, fitting, evaluation, benchmark), design.md (integration + file formats),
+                       pilot_plan.md, compliance.md, deploy.md
 ```
 
 Main deliverable columns are described in `docs/design.md` (appendix). `outputs/predictions.csv` holds `address_id, pin_x, pin_y, radius_50, radius_90, directions, confidence_tier` plus reason codes and a suggested action.
-
-## Evaluation rules
-
-- `outputs/folds.csv` is frozen: the 15 official-test addresses are fold 0 and the rest form five development folds with whole localities held out together. Surveyed truth enters the model only as neighbour knowledge from folds that are not being scored; `tests/test_model.py` proves a fold's predictions cannot depend on its own labels.
-- The official-test labels were seen during early exploration, so fold 0 is a sanity check, not a blind result.
 
 ## Tests
 
 `python -m tests.test_data`, `python -m tests.test_model`, `python -m tests.test_outputs`, `python -m tests.test_web` (the pipeline runs them last).
 
-## Known limits
+## Limits (full list in [`docs/methods.md`](docs/methods.md) section 10)
 
 - All data is synthetic, so real-world accuracy is unproven until a field pilot (`docs/pilot_plan.md`).
 - About 10% of addresses name no locality, only a pincode. Several localities about 1.4 km apart stay possible, so these stay near the old pin, are flagged low confidence and sent to verify-first. They set the 90th percentile.

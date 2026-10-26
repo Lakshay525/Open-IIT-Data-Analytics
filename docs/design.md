@@ -47,13 +47,9 @@ Column contracts are in the appendix at the end of this document.
 * **On visit close (optional)**: `PinModel.update(new_evidence)` then re-predict only the addresses sharing the visit's street key / landmark. Measured here: fitting all 2,880 addresses takes 0.4 s, predicting one address about 1 ms, and an update about 0.4 s (it rebuilds the key index; an incremental index would make it constant-time).
 * **Monthly**: refit sigmas (`geocoder/tuning.py`) and recalibrate radii (`geocoder/confidence.py`); compare calibration coverage with the previous month and alert if the 90% radius covers less than ~85% or more than ~97% of newly confirmed visits.
 
-## 5. Why this design (decisions and trade-offs)
+## 5. Why this design
 
-* **Evidence fusion, not a black-box model.** The clues are few, heterogeneous and have known reliability; fusion by inverse variance with robust gating is accurate here, trains in seconds, and every pin can be explained as "this visit + these two neighbours + this grid fit". That meets the "explainable and auditable" requirement without a post-hoc explainer.
-* **Street-number grid regression.** In numbered layouts (Nth cross / Mth main, block / road) the numbers are a coordinate system. A per-locality robust local-linear fit locates streets nobody has visited - the single biggest accuracy gain after the visits themselves.
-* **Conformal calibration on data the model did not see.** The radius for unvisited addresses is set on a 1,231-address hide-and-predict set, then *checked* on the surveyed addresses.
-* **Visits that disagree with text are protected.** A tight cluster of agreeing visits is ground truth about where the borrower lives, even if the KYC locality is wrong; text-derived clues are gated instead.
-* **Honest abstention.** Pincode-level addresses with no locality in the text cannot be resolved from text; the model stays near the old pin, reports a wide radius, and the planner verifies first.
+Fusion of a few clues of known reliability, rather than a black box, is what makes every pin explainable and every radius calibratable; `docs/methods.md` section 8 shows it also beats simpler and gradient-boosting alternatives on the same clues. Two decisions are worth stating for integrators: visits that agree with each other are protected from text-derived clues (a wrong KYC locality must not override ground truth), and addresses that cannot be resolved from text abstain honestly (wide radius, tier `low`, verify first).
 
 ## 6. Feedback loops and bias
 

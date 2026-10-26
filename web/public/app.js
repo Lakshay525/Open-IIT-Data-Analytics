@@ -66,8 +66,27 @@ function lineChart(el, series, opt) {
   el.innerHTML = svg(W, H, o);
 }
 
+
+function chartBench(S, which) {
+  const B = S.benchmark && S.benchmark[which]; if (!B) { $("#chartBench").innerHTML = ""; return; }
+  const order = ["old pin", "locality centroid", "street-key median", "equal-weight clues", "GP street numbers", "gradient boosting", "fusion, no gate", "fusion + gate (shipped)"];
+  const label = { "fusion + gate (shipped)": "our fusion model", "fusion, no gate": "fusion without the gate", "GP street numbers": "kriging on street numbers", "gradient boosting": "gradient-boosted trees" };
+  const rows = order.map(n => B.rows.find(r => r.name === n)).filter(Boolean);
+  const W = 720, rh = 44, H = 12 + rows.length * rh, x0 = 190, mx = Math.max(...rows.map(r => r.p90)) * 1.08; let o = "";
+  [0, .25, .5, .75, 1].forEach(f => { const x = x0 + (W - x0 - 16) * f; o += `<line x1="${x}" x2="${x}" y1="0" y2="${H}" stroke="#eef1f8"/>`; });
+  rows.forEach((r, i) => {
+    const y = 8 + i * rh, ours = r.name.startsWith("fusion +"), wm = (W - x0 - 16) * r.median / mx, wp = (W - x0 - 16) * r.p90 / mx;
+    o += T(0, y + 22, label[r.name] || r.name, { size: 12, fill: "#14305f", weight: ours ? 700 : 0 });
+    o += `<rect x="${x0}" y="${y + 4}" width="${wm}" height="14" rx="4" fill="${ours ? "#1d4486" : "#6f8fc4"}"/>` + T(x0 + wm + 6, y + 15, Math.round(r.median) + " m", { size: 11, weight: 700, fill: "#14305f" });
+    o += `<rect x="${x0}" y="${y + 21}" width="${wp}" height="10" rx="4" fill="${ours ? "#f5c542" : "#f3dc9a"}"/>` + T(x0 + wp + 6, y + 30, Math.round(r.p90) + " m", { size: 10, fill: "#7a6a3a" });
+  });
+  $("#chartBench").innerHTML = svg(W, H, o) + `<p class="muted small">n = ${fmt(B.n)} addresses</p>`;
+}
+
 function renderCharts(S) {
   chartImpact(S);
+  chartBench(S, "visited");
+  $$("#benchTabs button").forEach(b => b.onclick = () => { $$("#benchTabs button").forEach(x => x.classList.toggle("on", x === b)); chartBench(S, b.dataset.set); });
   lineChart($("#chartCdf"), [
     { name: "old geocoder", color: "#8a93a5", pts: S.cdf_surveyed_old.filter(p => p[0] > 0) },
     { name: "our pins", color: "#1d4486", pts: S.cdf_surveyed_new.filter(p => p[0] > 0) }

@@ -4,7 +4,7 @@
    and changing the official-test fold (0) must not change any development prediction.
 2. Online learning: one new visit moves predictions of other addresses on the same street.
 3. Output contract: pins.csv has the agreed columns, finite numbers, one row per address,
-   and scores with the shared eval.py.
+   and scores with the shared scorer (geocoder/scoring.py).
 4. Own-visit protection: an address with a tight cluster of visit rows is never overruled.
 """
 
@@ -90,7 +90,7 @@ def test_output_contract():
     scored, table = ev_mod.score_predictions(pins.rename(columns={"pin_x": "pred_x", "pin_y": "pred_y"})[
         ["address_id", "pred_x", "pred_y"]], truth, meta)
     overall = table[table.dimension == "overall"].iloc[0]
-    print(f"PASS output contract: 2,880 rows; eval.py overall median {overall.median_error_m:.1f} m, "
+    print(f"PASS output contract: 2,880 rows; scorer overall median {overall.median_error_m:.1f} m, "
           f"p90 {overall.p90_error_m:.1f} m")
 
 

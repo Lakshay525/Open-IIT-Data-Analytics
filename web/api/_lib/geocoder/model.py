@@ -28,7 +28,7 @@ sharing its street / landmark, each new visit improves many addresses, and
 Addresses whose text has no locality are handled with *locality hypotheses*
 (candidate localities from the pincode) scored by Bayesian evidence.
 
-All sigmas / gate settings live in `Params` and are fitted by `tune_pin_model.py`
+All sigmas / gate settings live in `Params` and are fitted by `geocoder/tuning.py`
 using only leave-one-out pseudo-labels from field visits -- never surveyed truth.
 """
 
@@ -279,7 +279,7 @@ class PinModel:
         rows = {}
         for a, (x, y, n, spread, W) in self._own.items():
             if a in self.feat.index:
-                sig = float(np.sqrt(15.0 ** 2 + (0.6 * spread) ** 2))
+                sig = float(np.sqrt(self.p.a_visit ** 2 + (self.p.b_visit * spread) ** 2))
                 rows[a] = (x, y, sig)
         for a, (x, y) in self._truth.items():
             rows[a] = (x, y, 5.0)

@@ -129,6 +129,12 @@ def public_data() -> None:
         "n_addresses": int(len(pred)), "n_visits": 5578, "n_surveyed": 100, "n_landmarks": int(len(lm)),
         "towns": index,
     }
+    bf = RES / "benchmark_estimators.csv"
+    if bf.exists():
+        b = pd.read_csv(bf)
+        stats["benchmark"] = {ts: {"n": int(g.n.iloc[0]), "rows": [{"name": r.estimator, "median": round(float(r.median_m), 1), "p90": round(float(r.p90_m), 1)}
+                                                                    for r in g.itertuples()]}
+                              for ts, g in b.groupby("test_set")}
     (PUB / "stats.json").write_text(json.dumps(stats, separators=(",", ":")), encoding="utf-8")
 
 

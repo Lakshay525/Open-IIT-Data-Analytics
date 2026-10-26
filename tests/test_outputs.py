@@ -91,7 +91,23 @@ def test_predictions_score_with_shared_eval():
     _, t = ev_mod.score_predictions(p.rename(columns={"pin_x": "pred_x", "pin_y": "pred_y"})[["address_id", "pred_x", "pred_y"]], truth, meta)
     o = t[t.dimension == "overall"].iloc[0]
     assert o.median_error_m < 80
-    print(f"PASS shared eval.py on predictions.csv: median {o.median_error_m:.1f} m, P90 {o.p90_error_m:.0f} m")
+    print(f"PASS shared scorer (geocoder/scoring.py) on predictions.csv: median {o.median_error_m:.1f} m, P90 {o.p90_error_m:.0f} m")
+
+
+def test_benchmark_claims():
+    """The model must beat the old pin, an unweighted average and the best single street clue on both test sets."""
+    f = RES / "benchmark_estimators.csv"
+    if not f.exists():
+        print("SKIP benchmark claims (run without --fast)")
+        return
+    b = pd.read_csv(f)
+    for ts in ("visited", "surveyed"):
+        t = b[b.test_set == ts].set_index("estimator")
+        ours = t.loc["fusion + gate (shipped)"]
+        for other in ("old pin", "locality centroid", "street-key median", "equal-weight clues", "GP street numbers"):
+            assert ours.median_m < t.loc[other, "median_m"], (ts, other)
+        assert ours.p90_m <= t.loc["gradient boosting", "p90_m"] * 1.05, ts
+    print("PASS benchmark: fusion beats the old pin, centroid, street median, equal weights and GP on both test sets")
 
 
 if __name__ == "__main__":
@@ -100,4 +116,5 @@ if __name__ == "__main__":
     test_directions_are_geometrically_correct()
     test_ps2_and_offline()
     test_predictions_score_with_shared_eval()
+    test_benchmark_claims()
     print("all output checks passed")

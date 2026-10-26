@@ -1,13 +1,13 @@
 """Evaluation driver: parse addresses -> leakage-safe CV on the 100 surveyed addresses
 -> ablations -> hide-and-predict check -> final pins.csv.
 
-Leakage rules (also described in README_TASK3.md)
+Leakage rules (also described in README.md)
 - Surveyed truth is only ever used as *neighbour knowledge* from folds that are not being scored.
   Fold f is scored with truths from the other development folds (1-5); fold 0 (official
   test) is scored with truths from folds 1-5 and is never used as knowledge for anything else.
-- Parameters were fitted on leave-one-out visit pseudo-labels (tune_pin_model.py), not on
+- Parameters were fitted on leave-one-out visit pseudo-labels (geocoder/tuning.py), not on
   surveyed truth.
-- pins.csv holds out-of-fold predictions for the 100 surveyed addresses, so eval.py can score
+- pins.csv holds out-of-fold predictions for the 100 surveyed addresses, so the scorer can read
   the file directly.
 
 Run:  python -m geocoder.evaluate
